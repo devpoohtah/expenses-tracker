@@ -1,56 +1,65 @@
-// Service Worker for Expenses Logger PWA
-
-const CACHE_NAME = 'expenses-logger-v3';
-
-// Use relative paths - works on any domain/subdirectory including GitHub Pages
-const urlsToCache = [
-    './',
-    './index.html',
-    './js/app.js',
-    './js/db.js',
-    './js/sw.js',
-    './manifest.json',
-    'https://cdn.tailwindcss.com',
-    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
-];
-
-// Install
-self.addEventListener('install', event => {
-    self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return Promise.allSettled(
-                urlsToCache.map(url => cache.add(url).catch(e => console.warn('Cache skip:', url, e)))
-            );
-        })
-    );
-});
-
-// Activate - clear old caches
-self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        )
-    );
-    self.clients.claim();
-});
-
-// Fetch - serve from cache, fallback to network
-self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
-
-    event.respondWith(
-        caches.match(event.request).then(cached => {
-            if (cached) return cached;
-
-            return fetch(event.request).then(response => {
-                if (!response || response.status !== 200) return response;
-
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                return response;
-            }).catch(() => caches.match('./index.html'));
-        })
-    );
-});
+{
+  "name": "Expenses Logger",
+  "short_name": "Expenses",
+  "description": "A simple offline expenses logger with PWA support",
+  "start_url": "/expenses-tracker/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%236366f1' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='100' fill='white' font-weight='bold'>\u20b1</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%236366f1' width='512' height='512'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='300' fill='white' font-weight='bold'>\u20b1</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "finance"
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f3f4f6' width='540' height='720'/><text x='270' y='360' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='%23667eea' font-weight='bold'>Expenses Logger</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Expense",
+      "short_name": "Add",
+      "description": "Quickly add a new expense",
+      "url": "/?action=add",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23667eea' width='96' height='96'/><text x='48' y='48' dominant-baseline='middle' text-anchor='middle' font-size='50' fill='white' font-weight='bold'>+</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "View Report",
+      "short_name": "Report",
+      "description": "View your expense report",
+      "url": "/?action=report",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23667eea' width='96' height='96'/><text x='48' y='48' dominant-baseline='middle' text-anchor='middle' font-size='50' fill='white' font-weight='bold'>\ud83d\udcca</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "scope": "/expenses-tracker/"
+}
